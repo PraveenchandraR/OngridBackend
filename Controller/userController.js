@@ -1,65 +1,53 @@
 const { UserModel,BookModel } = require("../MongoModel/userModel");
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { deleteModel } = require("mongoose");
 
-const passHash = async(password)=>{
-  try {
-    const saltRounds = 10;
-    const hashPassword = await bcrypt.hash(password, saltRounds);
-    return hashPassword;
-  } catch (error) {
-    console.log(error);
-  }
-}
+// const { deleteModel } = require("mongoose");
 
-const comparePass = (password, hashPass)=>{
-  return bcrypt.compare(password, hashPass);
-}
+// const passHash = async(password)=>{
+//   try {
+//     const saltRounds = 10;
+//     const hashPassword = await bcrypt.hash(password, saltRounds);
+//     return hashPassword;
+//   } catch (error) {
+//     console.log(error);
+//   }
+// }
 
 const signup = async (req, res) => {
   console.log("Signup is called..");
 
   const { name, email, password, phone } = req.body;
   try {
-    // Validating Inputs
-    if (!name || !email || !password || !phone) {
-      res
-        .status(401)
-        .send({ message: "Please enter complete details to signup" });
-    }
-
-    // Checking existing user
+    
     const existingUser = await UserModel.findOne({ email: email });
     if (existingUser) {
-      return res.status(200).send({
-        success: false,
-        message: "User is already registered, please sign in",
+      return res.send({
+        status: "not ok",
       });
     }
-
-    const hashPass = await passHash(password);
+      const saltrounds = (10)
+        const hashpassword = await bcrypt.hash(password,saltrounds)
 
     // Saving user in DB
-    const user = await new UserModel({
+    const user =  new UserModel({
       name,
+       phone,
       email,
-      password: hashPass,
-      phone,
-    }).save();
- return res.json({status:"ok"})
-    // res.status(200).send({
-    //   success: true,
-    //   message: "User SignedUp successfully",
-    // });
+      password: hashpassword,
+     
+    })
+    await user.save();
+    console.log(user);
+    return res.json({ status: "ok" })
+    
+
   } catch (error) {
     console.log(error);
     return res.status(500).send("Some error occurred while performing signup")
-    // res
-    //   .status(500)
-    //   .send({ message: "Some error occurred while performing signup" });
+   
   }
-};
+}
 const login = async (req,res)=>{
     const {email,password}=req.body;
     const user = await UserModel.findOne({email});
@@ -69,7 +57,7 @@ const login = async (req,res)=>{
     const checkpassword = await bcrypt.compare(password, user.password);
     if(checkpassword){
         const token = jwt.sign({email: user.email},process.env.JWT_SECRET, {
-            expiresIn:60,
+            expiresIn:'1d',
         })
         
         return res.json({status:"ok", data:token})
@@ -129,21 +117,20 @@ const bookDemo = async (req,res)=>{
     const {name,email,phone,organisation,known} = req.body;
     const user = await UserModel.findOne({email});
     if(!user){
-       return res.json("This email is not registered. if you not signup to OnGrid you can't book a demo please signup")
+       return res.json("This email is not registered. Please signin to book-Demo")
     }
     try{
-        const bookdemoobj = new BookModel({
+        const demoUser = new BookModel({
             name,
             email,
             phone,
             organisation,
             known
         })
-        const bookinsert = await bookdemoobj.save();
-        
-        return res.status(200).json("demo booked").send(bookinsert)
+      await demoUser.save();
+      return res.json({status:"ok"})
     }
-    catch(err){
+     catch(err){
         console.log(err)
         return res.status(500).send("something went wrong")
     }
@@ -180,7 +167,7 @@ const bookDemo = async (req,res)=>{
 // }
 const userdetails= async (req,res)=>{
   const { token } = req.body;
-  console.log(token)
+ 
     try {
         const user = jwt.verify(token, process.env.JWT_SECRET, (err,res)=>{
             if(err){
