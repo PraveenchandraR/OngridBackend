@@ -38,7 +38,7 @@ const signup = async (req, res) => {
      
     })
     await user.save();
-    console.log(user);
+    // console.log(user);
     return res.json({ status: "ok" })
     
 

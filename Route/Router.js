@@ -1,6 +1,6 @@
 const route = require('express').Router();
 const userFunc = require('../Controller/userController');
-const middleFunc = require('../Middleware/userMiddleware');
+// const middleFunc = require('../Middleware/userMiddleware');
 
 
 route.post('/signup', userFunc.signup);
